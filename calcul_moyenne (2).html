@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>INSAT MPI — Calcul de Moyenne</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:       #0d0f18;
+  --bg2:      #13162100;
+  --bg3:      #1a1d2e;
+  --card:     #161927;
+  --border:   #252840;
+  --text:     #e4e6f2;
+  --muted:    #5e6280;
+  --dim:      #3a3e5a;
+  --accent:   #e8a020;
+  --acc-dim:  rgba(232,160,32,.14);
+  --done:     #34d399;
+  --done-bg:  rgba(52,211,153,.11);
+  --exp:      #fbbf24;
+  --exp-bg:   rgba(251,191,36,.11);
+  --try:      #f87171;
+  --try-bg:   rgba(248,113,113,.11);
+  --pass:     #34d399;
+  --fail:     #f87171;
+  --r:        12px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'DM Sans',sans-serif;
+  min-height:100vh;
+}
+
+/* ── HEADER ── */
+header{
+  background: linear-gradient(180deg,#181b2e 0%,#111420 100%);
+  border-bottom:1px solid var(--border);
+  padding:1.6rem 2rem;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  flex-wrap:wrap;
+  gap:1.2rem;
+  position:sticky;
+  top:0;
+  z-index:100;
+  backdrop-filter:blur(12px);
+}
+.brand{display:flex;flex-direction:column;gap:3px;}
+.brand h1{
+  font-family:'Playfair Display',serif;
+  font-size:1.55rem;
+  letter-spacing:-.02em;
+  color:var(--text);
+  line-height:1;
+}
+.brand span{
+  font-size:.7rem;
+  text-transform:uppercase;
+  letter-spacing:.12em;
+  color:var(--muted);
+  font-weight:500;
+}
+.header-stats{display:flex;gap:.75rem;flex-wrap:wrap;}
+.stat{
+  background:var(--bg3);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:.6rem 1.1rem;
+  text-align:center;
+  min-width:90px;
+}
+.stat .slabel{
+  font-size:.62rem;
+  text-transform:uppercase;
+  letter-spacing:.1em;
+  color:var(--muted);
+  font-weight:600;
+}
+.stat .sval{
+  font-family:'JetBrains Mono',monospace;
+  font-size:1.35rem;
+  font-weight:600;
+  color:var(--accent);
+  margin-top:2px;
+  transition:color .3s;
+}
+.sval.pass{color:var(--pass);}
+.sval.fail{color:var(--fail);}
+
+/* ── TABS ── */
+nav{
+  background:#111420;
+  border-bottom:1px solid var(--border);
+  padding:0 2rem;
+  display:flex;
+}
+.tab{
+  padding:.85rem 1.4rem;
+  font-size:.83rem;
+  font-weight:500;
+  color:var(--muted);
+  cursor:pointer;
+  border-bottom:2px solid transparent;
+  transition:all .2s;
+  letter-spacing:.03em;
+  user-select:none;
+}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.tab:hover:not(.active){color:var(--text);}
+
+/* ── MAIN ── */
+main{padding:1.75rem 2rem 4rem;max-width:1440px;margin:0 auto;}
+.panel{display:none;}
+.panel.active{display:block;}
+
+/* ── SEM HEADER ── */
+.sem-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  flex-wrap:wrap;
+  gap:1rem;
+  margin-bottom:1.25rem;
+}
+.sem-title{
+  font-family:'Playfair Display',serif;
+  font-size:1.15rem;
+  color:var(--text);
+}
+.sem-right{display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap;}
+.sem-avg-wrap{
+  display:flex;
+  align-items:baseline;
+  gap:.5rem;
+}
+.sem-avg-label{
+  font-size:.72rem;
+  text-transform:uppercase;
+  letter-spacing:.09em;
+  color:var(--muted);
+}
+.sem-avg-val{
+  font-family:'JetBrains Mono',monospace;
+  font-size:1.5rem;
+  font-weight:600;
+  color:var(--dim);
+  transition:color .3s;
+}
+.sem-avg-val.pass{color:var(--pass);}
+.sem-avg-val.fail{color:var(--fail);}
+
+/* legend */
+.legend{
+  display:flex;
+  align-items:center;
+  gap:.9rem;
+  flex-wrap:wrap;
+}
+.leg{display:flex;align-items:center;gap:.35rem;font-size:.72rem;color:var(--muted);}
+.leg-dot{width:7px;height:7px;border-radius:50%;}
+.leg-dot.done{background:var(--done);}
+.leg-dot.exp{background:var(--exp);}
+.leg-dot.try{background:var(--try);}
+
+/* ── GRID ── */
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(320px,1fr));
+  gap:1rem;
+  margin-bottom:1.75rem;
+}
+
+/* ── CARD ── */
+.card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  padding:1.15rem 1.2rem;
+  transition:border-color .25s,box-shadow .25s;
+}
+.card:hover{
+  border-color:#353860;
+  box-shadow:0 4px 28px rgba(0,0,0,.35);
+}
+
+.card-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  margin-bottom:1rem;
+  gap:.5rem;
+}
+.cinfo .ccode{
+  font-size:.62rem;
+  text-transform:uppercase;
+  letter-spacing:.11em;
+  color:var(--muted);
+  font-weight:600;
+}
+.cinfo .cname{
+  font-size:.88rem;
+  font-weight:600;
+  color:var(--text);
+  margin-top:2px;
+  line-height:1.3;
+}
+.coef{
+  background:var(--acc-dim);
+  color:var(--accent);
+  font-family:'JetBrains Mono',monospace;
+  font-size:.7rem;
+  font-weight:600;
+  padding:.22rem .55rem;
+  border-radius:6px;
+  white-space:nowrap;
+  flex-shrink:0;
+}
+
+/* grade rows */
+.grades{display:flex;flex-direction:column;gap:.55rem;margin-bottom:.95rem;}
+.grow{display:flex;align-items:center;gap:.5rem;}
+.glabel{
+  font-size:.65rem;
+  text-transform:uppercase;
+  letter-spacing:.1em;
+  color:var(--muted);
+  font-weight:700;
+  width:42px;
+  flex-shrink:0;
+}
+.ginput{
+  flex:1;
+  background:var(--bg3);
+  border:1px solid var(--border);
+  color:var(--text);
+  font-family:'JetBrains Mono',monospace;
+  font-size:.88rem;
+  padding:.42rem .7rem;
+  border-radius:8px;
+  outline:none;
+  transition:border-color .15s,background .15s;
+  min-width:0;
+}
+.ginput::placeholder{color:var(--muted);opacity:.6;}
+.ginput:focus{border-color:var(--accent);}
+.ginput.s-done{border-color:var(--done);background:var(--done-bg);}
+.ginput.s-exp {border-color:var(--exp); background:var(--exp-bg);}
+.ginput.s-try {border-color:var(--try); background:var(--try-bg);}
+
+.sbtn{
+  width:30px;height:30px;
+  border-radius:7px;
+  border:1px solid var(--border);
+  background:var(--bg3);
+  cursor:pointer;
+  font-size:.75rem;
+  font-weight:700;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+  color:var(--muted);
+  transition:all .15s;
+  user-select:none;
+}
+.sbtn:hover{border-color:var(--dim);color:var(--text);}
+.sbtn.done{background:var(--done-bg);border-color:var(--done);color:var(--done);}
+.sbtn.exp {background:var(--exp-bg); border-color:var(--exp); color:var(--exp);}
+.sbtn.try {background:var(--try-bg); border-color:var(--try); color:var(--try);}
+
+/* result */
+.result{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding-top:.8rem;
+  border-top:1px solid var(--border);
+}
+.rlabel{
+  font-size:.7rem;
+  text-transform:uppercase;
+  letter-spacing:.09em;
+  color:var(--muted);
+  font-weight:600;
+}
+.rright{display:flex;align-items:center;gap:.55rem;}
+.rbadge{
+  font-size:.62rem;
+  font-weight:700;
+  padding:.18rem .5rem;
+  border-radius:5px;
+  text-transform:uppercase;
+  letter-spacing:.06em;
+}
+.rbadge.pass{background:var(--done-bg);color:var(--done);}
+.rbadge.fail{background:var(--try-bg); color:var(--try);}
+.rval{
+  font-family:'JetBrains Mono',monospace;
+  font-size:1.15rem;
+  font-weight:600;
+  color:var(--dim);
+  transition:color .25s;
+}
+.rval.pass{color:var(--pass);}
+.rval.fail{color:var(--fail);}
+
+/* ── ANNUAL ── */
+.annual{
+  background:linear-gradient(135deg,#181b2e,#1a1d2e);
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  padding:1.5rem 2rem;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  flex-wrap:wrap;
+  gap:1rem;
+  margin-top:.5rem;
+}
+.annual-left h2{
+  font-family:'Playfair Display',serif;
+  font-size:1.15rem;
+  color:var(--text);
+}
+.annual-left p{font-size:.75rem;color:var(--muted);margin-top:4px;}
+.annual-val{
+  font-family:'JetBrains Mono',monospace;
+  font-size:2.8rem;
+  font-weight:600;
+  color:var(--dim);
+  transition:color .3s;
+}
+.annual-val.pass{color:var(--pass);}
+.annual-val.fail{color:var(--fail);}
+
+/* ── STATUS LEGEND TOOLTIP ── */
+.leg-hint{
+  font-size:.65rem;
+  color:var(--muted);
+  opacity:.7;
+  margin-left:.25rem;
+}
+
+@media(max-width:640px){
+  header{padding:1.1rem 1rem;}
+  main{padding:1rem 1rem 3rem;}
+  nav{padding:0 1rem;}
+  .grid{grid-template-columns:1fr;}
+  .annual{padding:1.1rem 1.25rem;}
+  .annual-val{font-size:2rem;}
+}
+
+/* ── SCORES TAB ── */
+.scores-layout{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;}
+@media(max-width:900px){.scores-layout{grid-template-columns:1fr;}}
+
+.section-title{
+  font-family:'Playfair Display',serif;
+  font-size:1rem;
+  color:var(--text);
+  margin-bottom:1rem;
+  padding-bottom:.5rem;
+  border-bottom:1px solid var(--border);
+  display:flex;
+  align-items:center;
+  gap:.6rem;
+}
+.section-title .stag{
+  font-family:'DM Sans',sans-serif;
+  font-size:.62rem;
+  text-transform:uppercase;
+  letter-spacing:.1em;
+  color:var(--muted);
+  font-weight:600;
+  background:var(--bg3);
+  border:1px solid var(--border);
+  padding:.15rem .5rem;
+  border-radius:5px;
+}
+
+/* Moy modules mini cards */
+.moy-grid{display:grid;grid-template-columns:1fr 1fr;gap:.65rem;margin-bottom:.5rem;}
+.moy-card{
+  background:var(--bg3);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:.75rem 1rem;
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+}
+.moy-card .mc-label{font-size:.65rem;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);font-weight:600;}
+.moy-card .mc-val{
+  font-family:'JetBrains Mono',monospace;
+  font-size:1.2rem;
+  font-weight:600;
+  color:var(--dim);
+  transition:color .25s;
+}
+.moy-card .mc-val.pass{color:var(--pass);}
+.moy-card .mc-val.fail{color:var(--fail);}
+.moy-card.highlight{border-color:rgba(232,160,32,.4);background:var(--acc-dim);}
+.moy-card.highlight .mc-val{color:var(--accent);}
+
+/* Score big cards */
+.score-cards{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;}
+@media(max-width:640px){.score-cards{grid-template-columns:1fr;}}
+
+.score-card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  padding:1.15rem 1.2rem;
+  transition:border-color .25s,box-shadow .25s;
+  cursor:default;
+}
+.score-card:hover{border-color:#353860;box-shadow:0 4px 28px rgba(0,0,0,.35);}
+.score-card .sc-name{
+  font-size:.65rem;
+  text-transform:uppercase;
+  letter-spacing:.11em;
+  color:var(--muted);
+  font-weight:700;
+}
+.score-card .sc-full{
+  font-size:.85rem;
+  font-weight:600;
+  color:var(--text);
+  margin:.25rem 0 .9rem;
+}
+.score-card .sc-val{
+  font-family:'JetBrains Mono',monospace;
+  font-size:2.2rem;
+  font-weight:600;
+  color:var(--dim);
+  line-height:1;
+  transition:color .25s;
+}
+.score-card .sc-val.ready{color:var(--accent);}
+.score-card .sc-formula{
+  font-size:.65rem;
+  color:var(--muted);
+  margin-top:.7rem;
+  padding-top:.65rem;
+  border-top:1px solid var(--border);
+  line-height:1.55;
+}
+.score-card .sc-formula code{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.63rem;
+  background:var(--bg3);
+  padding:.1rem .35rem;
+  border-radius:4px;
+  color:var(--text);
+}
+
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <h1>INSAT · MPI</h1>
+    <span>1ère Année — Suivi des notes</span>
+  </div>
+  <div class="header-stats">
+    <div class="stat"><div class="slabel">Sem. I</div><div class="sval" id="hs1">—</div></div>
+    <div class="stat"><div class="slabel">Sem. II</div><div class="sval" id="hs2">—</div></div>
+    <div class="stat"><div class="slabel">Annuelle</div><div class="sval" id="ha">—</div></div>
+  </div>
+</header>
+
+<nav>
+  <div class="tab active" id="tab1" onclick="switchTab(1)">Semestre I</div>
+  <div class="tab" id="tab2" onclick="switchTab(2)">Semestre II</div>
+  <div class="tab" id="tab3" onclick="switchTab(3)">Scores & Orientations</div>
+</nav>
+
+<main>
+  <div class="panel active" id="p1">
+    <div class="sem-head">
+      <span class="sem-title">Semestre I</span>
+      <div class="sem-right">
+        <div class="legend">
+          <div class="leg"><div class="leg-dot done"></div>Done</div>
+          <div class="leg"><div class="leg-dot exp"></div>Expecting</div>
+          <div class="leg"><div class="leg-dot try"></div>Trying</div>
+          <span class="leg-hint">— cliquez sur le bouton pour changer le statut</span>
+        </div>
+        <div class="sem-avg-wrap">
+          <span class="sem-avg-label">Moyenne</span>
+          <span class="sem-avg-val" id="avg1">—</span>
+        </div>
+      </div>
+    </div>
+    <div class="grid" id="g1"></div>
+  </div>
+
+  <div class="panel" id="p2">
+    <div class="sem-head">
+      <span class="sem-title">Semestre II</span>
+      <div class="sem-right">
+        <div class="legend">
+          <div class="leg"><div class="leg-dot done"></div>Done</div>
+          <div class="leg"><div class="leg-dot exp"></div>Expecting</div>
+          <div class="leg"><div class="leg-dot try"></div>Trying</div>
+          <span class="leg-hint">— cliquez sur le bouton pour changer le statut</span>
+        </div>
+        <div class="sem-avg-wrap">
+          <span class="sem-avg-label">Moyenne</span>
+          <span class="sem-avg-val" id="avg2">—</span>
+        </div>
+      </div>
+    </div>
+    <div class="grid" id="g2"></div>
+  </div>
+
+  <div class="panel" id="p3">
+    <div class="sem-head">
+      <span class="sem-title">Scores & Orientations</span>
+      <span style="font-size:.75rem;color:var(--muted);">Calculés automatiquement depuis vos notes</span>
+    </div>
+
+    <div class="scores-layout">
+      <!-- LEFT: moyennes modules -->
+      <div>
+        <div class="section-title">Moyennes par Module <span class="stag">Inputs pour les scores</span></div>
+
+        <div class="moy-grid">
+          <div class="moy-card highlight">
+            <span class="mc-label">Moy. Annuelle</span>
+            <span class="mc-val" id="sc-ann">—</span>
+          </div>
+          <div class="moy-card">
+            <span class="mc-label">Moy. Info</span>
+            <span class="mc-val" id="sc-info">—</span>
+          </div>
+          <div class="moy-card">
+            <span class="mc-label">Moy. Math</span>
+            <span class="mc-val" id="sc-math">—</span>
+          </div>
+          <div class="moy-card">
+            <span class="mc-label">Systèmes Logiques</span>
+            <span class="mc-val" id="sc-syslog">—</span>
+          </div>
+          <div class="moy-card">
+            <span class="mc-label">Électronique</span>
+            <span class="mc-val" id="sc-elec">—</span>
+          </div>
+          <div class="moy-card">
+            <span class="mc-label">Circuits élec.</span>
+            <span class="mc-val" id="sc-circuit">—</span>
+          </div>
+          <div class="moy-card">
+            <span class="mc-label">Mécanique</span>
+            <span class="mc-val" id="sc-meca">—</span>
+          </div>
+          <div class="moy-card">
+            <span class="mc-label">Thermodynamique</span>
+            <span class="mc-val" id="sc-thermo">—</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: score cards -->
+      <div>
+        <div class="section-title">Scores d'Orientation <span class="stag">Spécialités</span></div>
+        <div class="score-cards">
+
+          <div class="score-card">
+            <div class="sc-name">RT</div>
+            <div class="sc-full">Réseaux & Télécoms</div>
+            <div class="sc-val" id="score-rt">—</div>
+            <div class="sc-formula">
+              <code>2×Ann</code> + <code>Math</code> + <code>Info</code> + <code>SysLog</code>
+            </div>
+          </div>
+
+          <div class="score-card">
+            <div class="sc-name">GL</div>
+            <div class="sc-full">Génie Logiciel</div>
+            <div class="sc-val" id="score-gl">—</div>
+            <div class="sc-formula">
+              <code>2×Ann</code> + <code>Math</code> + <code>2×Info</code> + <code>SysLog</code>
+            </div>
+          </div>
+
+          <div class="score-card">
+            <div class="sc-name">IIA</div>
+            <div class="sc-full">Informatique Industrielle & Automatique</div>
+            <div class="sc-val" id="score-iia">—</div>
+            <div class="sc-formula">
+              <code>2×Ann</code> + <code>Math</code> + <code>Info</code> + <code>(Circ+Elec+SysLog)÷3</code> + <code>(Méca+Thermo)÷2</code>
+            </div>
+          </div>
+
+          <div class="score-card">
+            <div class="sc-name">IMI</div>
+            <div class="sc-full">Informatique Multimédia & Image</div>
+            <div class="sc-val" id="score-imi">—</div>
+            <div class="sc-formula">
+              <code>2×Ann</code> + <code>Math</code> + <code>(Circ+Elec+SysLog)÷3</code> + <code>(Méca+Thermo)÷2</code>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+    <div class="annual-left">
+      <h2>Moyenne Annuelle</h2>
+      <p>Pondérée par les coefficients · Seuil de validation : 10/20</p>
+    </div>
+    <div class="annual-val" id="av">—</div>
+  <div class="annual">
+
+<script>
+// ── DATA ──────────────────────────────────────────────────────────
+const S1 = [
+  { code:'750', name:'Optique géométrique',                       coef:3,   type:'dse' },
+  { code:'751', name:'Mécanique Générale',                        coef:4,   type:'mec' },
+  { code:'752', name:'Mathématiques Analyse 1',                   coef:3,   type:'de'  },
+  { code:'753', name:'Mathématiques Algèbre 1',                   coef:3,   type:'de'  },
+  { code:'754', name:'Electrostatique magnétostatique',           coef:3,   type:'dse' },
+  { code:'755', name:'Circuits électriques',                      coef:4,   type:'dse' },
+  { code:'756', name:'Algorithmes et structures de données 1',    coef:3,   type:'de'  },
+  { code:'757', name:'Programmation 1',                           coef:2.5, type:'te'  },
+  { code:'758', name:'Droit',                                     coef:1.5, type:'de'  },
+  { code:'759', name:'Français 1',                                coef:1.5, type:'de'  },
+  { code:'760', name:'Anglais 1',                                 coef:1.5, type:'de'  },
+];
+
+const S2 = [
+  { code:'761', name:'Analyse 2',                                 coef:3,   type:'de'  },
+  { code:'762', name:'Algèbre 2',                                 coef:3,   type:'de'  },
+  { code:'763', name:'Electromagnétisme',                         coef:3.5, type:'de'  },
+  { code:'764', name:'Thermodynamique',                           coef:3.5, type:'thm' },
+  { code:'765', name:'Algorithmique et structures de données 2',  coef:3.5, type:'de'  },
+  { code:'766', name:'Atelier Programmation 2',                   coef:2,   type:'te'  },
+  { code:'767', name:'Systèmes Logiques',                         coef:3.5, type:'dse' },
+  { code:'768', name:'Electronique',                              coef:3.5, type:'dse' },
+  { code:'770', name:'Français II',                               coef:1.5, type:'de'  },
+  { code:'771', name:"Introduction à l'Économie",                 coef:1.5, type:'de'  },
+  { code:'773', name:'Anglais',                                   coef:1.5, type:'de'  },
+];
+
+// type → fields
+const FIELDS = { de:['ds','exam'], mec:['ds','exam'], dse:['ds','tp','exam'], te:['tp','exam'], thm:['ds','exam'] };
+const FLABELS = { ds:'DS', tp:'TP', exam:'Examen' };
+
+// type → formula
+function calcMoy(type, v) {
+  const g = k => v[k] ?? null;
+  if (g('ds')===null && g('tp')===null && g('exam')===null) return null;
+  switch(type) {
+    case 'de':  return (g('ds')!==null && g('exam')!==null) ? g('ds')*.3 + g('exam')*.7 : null;
+    case 'mec': return (g('ds')!==null && g('exam')!==null) ? g('ds')/3  + g('exam')*2/3 : null;
+    case 'dse': return (g('ds')!==null && g('tp')!==null && g('exam')!==null) ? g('ds')*.25 + g('tp')*.25 + g('exam')*.5 : null;
+    case 'te':  return (g('tp')!==null && g('exam')!==null) ? g('tp')*.5 + g('exam')*.5 : null;
+    case 'thm': return (g('ds')!==null && g('exam')!==null) ? g('ds')*.25 + g('exam')*.75 : null;
+  }
+  return null;
+}
+
+// ── STATE ─────────────────────────────────────────────────────────
+const STATUSES = [null,'done','exp','try'];
+const ICONS    = { null:'·', done:'✓', exp:'~', try:'✗' };
+
+const state = {}; // key: `${code}_${field}` → {value, status}
+
+function key(code,field){ return `${code}_${field}`; }
+
+function initState(list){
+  list.forEach(s => FIELDS[s.type].forEach(f => {
+    const k = key(s.code,f);
+    if (!state[k]) state[k] = { value:null, status:null };
+  }));
+}
+initState(S1); initState(S2);
+
+// ── RENDER ────────────────────────────────────────────────────────
+function buildCard(s){
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.id = `c-${s.code}`;
+
+  const fields = FIELDS[s.type];
+
+  // top
+  const top = document.createElement('div');
+  top.className = 'card-top';
+  top.innerHTML = `
+    <div class="cinfo">
+      <div class="ccode">${s.code}</div>
+      <div class="cname">${s.name}</div>
+    </div>
+    <div class="coef">coef ${s.coef}</div>`;
+  card.appendChild(top);
+
+  // grades
+  const grades = document.createElement('div');
+  grades.className = 'grades';
+
+  fields.forEach(f => {
+    const row = document.createElement('div');
+    row.className = 'grow';
+
+    const label = document.createElement('span');
+    label.className = 'glabel';
+    label.textContent = FLABELS[f];
+
+    const inp = document.createElement('input');
+    inp.type = 'number'; inp.min=0; inp.max=20; inp.step=0.25;
+    inp.className = 'ginput';
+    inp.placeholder = '—';
+    inp.dataset.code = s.code; inp.dataset.field = f;
+
+    const btn = document.createElement('button');
+    btn.className = 'sbtn';
+    btn.dataset.code = s.code; btn.dataset.field = f;
+    btn.title = 'Changer le statut';
+
+    refreshInput(inp, btn, s.code, f);
+
+    inp.addEventListener('input', () => {
+      const v = parseFloat(inp.value);
+      state[key(s.code,f)].value = isNaN(v) ? null : Math.min(20, Math.max(0,v));
+      refreshResult(card, s);
+      recalc();
+      saveState();
+    });
+
+    btn.addEventListener('click', () => {
+      const st = state[key(s.code,f)];
+      const i = STATUSES.indexOf(st.status);
+      st.status = STATUSES[(i+1) % STATUSES.length];
+      refreshInput(inp, btn, s.code, f);
+      saveState();
+    });
+
+    row.append(label, inp, btn);
+    grades.appendChild(row);
+  });
+  card.appendChild(grades);
+
+  // result
+  const res = document.createElement('div');
+  res.className = 'result';
+  res.innerHTML = `
+    <span class="rlabel">Moyenne</span>
+    <div class="rright">
+      <span class="rval">—</span>
+    </div>`;
+  card.appendChild(res);
+
+  return card;
+}
+
+function refreshInput(inp, btn, code, field){
+  const st = state[key(code,field)];
+  inp.className = 'ginput' + (st.status ? ` s-${st.status}` : '');
+  btn.className  = 'sbtn'  + (st.status ? ` ${st.status}` : '');
+  btn.textContent = ICONS[st.status];
+}
+
+function refreshResult(card, s){
+  const vals = {};
+  FIELDS[s.type].forEach(f => vals[f] = state[key(s.code,f)].value);
+  const moy = calcMoy(s.type, vals);
+  const rval  = card.querySelector('.rval');
+  if (moy !== null){
+    rval.textContent = moy.toFixed(2);
+    rval.className = `rval ${moy>=10?'pass':'fail'}`;
+  } else {
+    rval.textContent = '—';
+    rval.className = 'rval';
+  }
+  return moy;
+}
+
+// ── AVERAGES ──────────────────────────────────────────────────────
+function semAvg(list){
+  let wSum=0, coefSum=0;
+  list.forEach(s => {
+    const vals = {};
+    FIELDS[s.type].forEach(f => vals[f] = state[key(s.code,f)].value);
+    const m = calcMoy(s.type, vals);
+    if (m !== null){ wSum += m*s.coef; coefSum += s.coef; }
+  });
+  return coefSum > 0 ? wSum/coefSum : null;
+}
+
+function setAvgEl(el, val){
+  if (val !== null){
+    el.textContent = val.toFixed(2);
+    el.className = el.className.replace(/\s*(pass|fail)/g,'') + ` ${val>=10?'pass':'fail'}`;
+  } else {
+    el.textContent = '—';
+    el.className = el.className.replace(/\s*(pass|fail)/g,'');
+  }
+}
+
+function recalc(){
+  const a1 = semAvg(S1); setAvgEl(document.getElementById('avg1'), a1); setAvgEl(document.getElementById('hs1'), a1);
+  const a2 = semAvg(S2); setAvgEl(document.getElementById('avg2'), a2); setAvgEl(document.getElementById('hs2'), a2);
+
+  let wSum=0, cSum=0;
+  [...S1,...S2].forEach(s=>{
+    const vals={}; FIELDS[s.type].forEach(f=>vals[f]=state[key(s.code,f)].value);
+    const m=calcMoy(s.type,vals);
+    if(m!==null){wSum+=m*s.coef;cSum+=s.coef;}
+  });
+  const ann = cSum>0 ? wSum/cSum : null;
+  const aEl = document.getElementById('av');
+  const hEl = document.getElementById('ha');
+  if(ann!==null){
+    const cls = ann>=10?'pass':'fail';
+    aEl.textContent = ann.toFixed(2); aEl.className=`annual-val ${cls}`;
+    hEl.textContent = ann.toFixed(2); hEl.className=`sval ${cls}`;
+  } else {
+    aEl.textContent='—'; aEl.className='annual-val';
+    hEl.textContent='—'; hEl.className='sval';
+  }
+
+  // ── SCORES TAB ──
+  const getMoy = code => {
+    const s = [...S1,...S2].find(x=>x.code===code);
+    if(!s) return null;
+    const vals={}; FIELDS[s.type].forEach(f=>vals[f]=state[key(s.code,f)].value);
+    return calcMoy(s.type,vals);
+  };
+
+  // Moy Info = (2*Algo1 + 2*Algo2 + Prog1 + Prog2) / 6
+  const algo1=getMoy('756'), algo2=getMoy('765'), prog1=getMoy('757'), prog2=getMoy('766');
+  const moyInfo = (algo1!==null && algo2!==null && prog1!==null && prog2!==null)
+    ? (2*algo1 + 2*algo2 + prog1 + prog2) / 6 : null;
+
+  // Moy Math = (Analyse1 + Algebre1 + Analyse2 + Algebre2) / 4
+  const an1=getMoy('752'), al1=getMoy('753'), an2=getMoy('761'), al2=getMoy('762');
+  const moyMath = (an1!==null && al1!==null && an2!==null && al2!==null)
+    ? (an1 + al1 + an2 + al2) / 4 : null;
+
+  const syslog  = getMoy('767');
+  const elec    = getMoy('768');
+  const circuit = getMoy('755');
+  const meca    = getMoy('751');
+  const thermo  = getMoy('764');
+
+  // helper to set a moy-card val
+  const setMC = (id, val) => {
+    const el = document.getElementById(id);
+    if(!el) return;
+    if(val!==null){
+      el.textContent = val.toFixed(2);
+      el.className = `mc-val${val>=10?' pass':' fail'}`;
+    } else {
+      el.textContent = '—';
+      el.className = 'mc-val';
+    }
+  };
+
+  setMC('sc-ann',    ann);
+  setMC('sc-info',   moyInfo);
+  setMC('sc-math',   moyMath);
+  setMC('sc-syslog', syslog);
+  setMC('sc-elec',   elec);
+  setMC('sc-circuit',circuit);
+  setMC('sc-meca',   meca);
+  setMC('sc-thermo', thermo);
+
+  // Score formulas
+  const scores = {
+    rt:  (ann!==null && moyMath!==null && moyInfo!==null && syslog!==null)
+           ? 2*ann + moyMath + moyInfo + syslog : null,
+    gl:  (ann!==null && moyMath!==null && moyInfo!==null && syslog!==null)
+           ? 2*ann + moyMath + 2*moyInfo + syslog : null,
+    iia: (ann!==null && moyMath!==null && moyInfo!==null && circuit!==null && elec!==null && syslog!==null && meca!==null && thermo!==null)
+           ? 2*ann + moyMath + moyInfo + (circuit+elec+syslog)/3 + (meca+thermo)/2 : null,
+    imi: (ann!==null && moyMath!==null && circuit!==null && elec!==null && syslog!==null && meca!==null && thermo!==null)
+           ? 2*ann + moyMath + (circuit+elec+syslog)/3 + (meca+thermo)/2 : null,
+  };
+
+  ['rt','gl','iia','imi'].forEach(k => {
+    const el = document.getElementById(`score-${k}`);
+    if(!el) return;
+    if(scores[k]!==null){
+      el.textContent = scores[k].toFixed(3);
+      el.className = 'sc-val ready';
+    } else {
+      el.textContent = '—';
+      el.className = 'sc-val';
+    }
+  });
+}
+
+// ── TAB ───────────────────────────────────────────────────────────
+function switchTab(n){
+  [1,2,3].forEach(i=>{
+    document.getElementById(`tab${i}`).classList.toggle('active',i===n);
+    document.getElementById(`p${i}`).classList.toggle('active',i===n);
+  });
+}
+
+// ── PERSISTENCE ───────────────────────────────────────────────────
+const STORAGE_KEY = 'insat-mpi-grades';
+
+function saveState(){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+function loadState(){
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return;
+    const saved = JSON.parse(raw);
+    Object.keys(saved).forEach(k => { if(state[k]) state[k] = saved[k]; });
+  } catch(e){ console.warn('Could not load saved state', e); }
+}
+
+// ── INIT ──────────────────────────────────────────────────────────
+const g1 = document.getElementById('g1');
+const g2 = document.getElementById('g2');
+
+// Load saved state BEFORE building cards so inputs render with saved values
+loadState();
+
+S1.forEach(s => g1.appendChild(buildCard(s)));
+S2.forEach(s => g2.appendChild(buildCard(s)));
+
+// After cards are built, sync input elements with loaded state
+;[...S1,...S2].forEach(s => {
+  FIELDS[s.type].forEach(f => {
+    const inp = document.querySelector(`input[data-code="${s.code}"][data-field="${f}"]`);
+    const btn = document.querySelector(`button[data-code="${s.code}"][data-field="${f}"]`);
+    const st = state[key(s.code,f)];
+    if(inp && st.value !== null) inp.value = st.value;
+    if(inp && btn) refreshInput(inp, btn, s.code, f);
+    const card = document.getElementById(`c-${s.code}`);
+    if(card) refreshResult(card, s);
+  });
+});
+
+recalc();
+</script>
+</body>
+</html>
