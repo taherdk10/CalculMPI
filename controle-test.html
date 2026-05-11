@@ -404,6 +404,21 @@ function annAvg(withCtrl=false){
 
 function hasAnyCtrl(){return Object.values(ctrlGrades).some(v=>v!==null);}
 
+// Lightweight update — only refreshes banner + sim average, no DOM rebuild
+function updateCtrlSim(){
+  const ann=annAvg(false);
+  const banner=document.getElementById('ctrl-banner');
+  const ctrlPrin=document.getElementById('ctrl-prin');
+  if(ann!==null){
+    ctrlPrin.textContent=ann.toFixed(2);
+    if(ann>=10){banner.className='ctrl-banner safe';document.getElementById('ctrl-icon').textContent='✓';document.getElementById('ctrl-title').textContent='Passage direct';document.getElementById('ctrl-sub').textContent='Moyenne annuelle ≥ 10 — aucune session de contrôle requise';ctrlPrin.className='ctrl-avg-num pass';}
+    else{banner.className='ctrl-banner danger';document.getElementById('ctrl-icon').textContent='⚠';document.getElementById('ctrl-title').textContent='Session de contrôle déclenchée';document.getElementById('ctrl-sub').textContent='Moyenne annuelle < 10 — toute matière en dessous de 10 est redoable';ctrlPrin.className='ctrl-avg-num fail';}
+  }else{banner.className='ctrl-banner unknown';document.getElementById('ctrl-icon').textContent='·';document.getElementById('ctrl-title').textContent='Moyenne annuelle';document.getElementById('ctrl-sub').textContent='Entrez vos notes pour voir le statut';ctrlPrin.textContent='—';ctrlPrin.className='ctrl-avg-num';}
+  const simWrap=document.getElementById('ctrl-sim-wrap'),simEl=document.getElementById('ctrl-sim');
+  if(hasAnyCtrl()){const sim=annAvg(true);simWrap.style.display='';if(sim!==null){simEl.textContent=sim.toFixed(2);simEl.className=`ctrl-avg-num ctrl-c${sim>=10?' pass':''}`;}else{simEl.textContent='—';}}
+  else{simWrap.style.display='none';}
+}
+
 function setAvgEl(el,val){
   if(val!==null){el.textContent=val.toFixed(2);el.className=el.className.replace(/\s*(pass|fail)/g,'')+(val>=10?' pass':' fail');}
   else{el.textContent='—';el.className=el.className.replace(/\s*(pass|fail)/g,'');}
@@ -468,7 +483,7 @@ function buildCtrlList(list,containerId){
         const v=parseFloat(inp.value);
         ctrlGrades[s.code]=isNaN(v)?null:Math.min(20,Math.max(0,v));
         updateNote();
-        updateCtrlPanel();
+        updateCtrlSim();
         saveCtrlState();
       });
 
