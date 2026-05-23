@@ -71,6 +71,8 @@ main{padding:1.75rem 2rem 4rem;max-width:1440px;margin:0 auto;}
 .rright{display:flex;align-items:center;gap:.55rem;}
 .rval{font-family:'JetBrains Mono',monospace;font-size:1.15rem;font-weight:600;color:var(--dim);transition:color .25s;}
 .rval.pass{color:var(--pass);}.rval.fail{color:var(--fail);}
+
+/* ── Annual bar — bigger ── */
 .annual{background:linear-gradient(135deg,#181b2e,#1a1d2e);border:1px solid var(--border);border-radius:var(--r);padding:2rem 2.5rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-top:.5rem;}
 .annual-left h2{font-family:'Playfair Display',serif;font-size:1.35rem;color:var(--text);}
 .annual-left p{font-size:.78rem;color:var(--muted);margin-top:6px;}
@@ -134,6 +136,8 @@ main{padding:1.75rem 2rem 4rem;max-width:1440px;margin:0 auto;}
 .ctrl-sem-avg{font-family:'JetBrains Mono',monospace;font-size:.9rem;font-weight:600;color:var(--dim);}
 .ctrl-sem-avg.pass{color:var(--pass);}.ctrl-sem-avg.fail{color:var(--fail);}
 .ctrl-subject-list{display:flex;flex-direction:column;gap:.85rem;}
+
+/* ── Contrôle subject card — expanded ── */
 .ctrl-subj-card{background:var(--card);border:1px solid rgba(248,113,113,.3);border-radius:var(--r);overflow:hidden;}
 .ctrl-subj-head{display:flex;align-items:center;justify-content:space-between;padding:.85rem 1.15rem;gap:.75rem;background:rgba(248,113,113,.06);}
 .ctrl-subj-name{font-size:.9rem;font-weight:600;color:var(--text);flex:1;}
@@ -142,6 +146,8 @@ main{padding:1.75rem 2rem 4rem;max-width:1440px;margin:0 auto;}
 .ctrl-badge.fail{background:var(--try-bg);color:var(--try);}
 .ctrl-badge.pass{background:var(--done-bg);color:var(--done);}
 .ctrl-badge.pending{background:var(--bg3);color:var(--muted);border:1px solid var(--border);}
+
+/* Grade details row */
 .ctrl-details{display:flex;align-items:stretch;gap:0;border-top:1px solid var(--border);}
 .ctrl-detail-block{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:1rem .85rem;flex:1;border-right:1px solid var(--border);}
 .ctrl-detail-block:last-child{border-right:none;}
@@ -611,8 +617,8 @@ function recalc(){
   let wS=0,cS=0;[...S1,...S2].forEach(s=>{const m=getMoy(s.code);if(m!==null){wS+=m*s.coef;cS+=s.coef;}});
   const ann=cS>0?wS/cS:null;
   const aEl=document.getElementById('av'),hEl=document.getElementById('ha');
-  if(sim!==null){aEl.textContent=sim.toFixed(2);aEl.className=`ctrl-avg-num ctrl-c${sim>=10?' pass':''}`;}
-    else{aEl.textContent='—';}
+  if(ann!==null){const cls=ann>=10?'pass':'fail';aEl.textContent=ann.toFixed(2);aEl.className=`annual-val ${cls}`;hEl.textContent=ann.toFixed(2);hEl.className=`sval ${cls}`;}
+  else{aEl.textContent='—';aEl.className='annual-val';hEl.textContent='—';hEl.className='sval';}
 
   const algo1=getMoy('756'),algo2=getMoy('765'),prog1=getMoy('757'),prog2=getMoy('766');
   const moyInfo=(algo1!==null&&algo2!==null&&prog1!==null&&prog2!==null)?(2*algo1+2*algo2+prog1+prog2)/6:null;
