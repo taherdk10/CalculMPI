@@ -282,7 +282,6 @@ main{padding:1.75rem 2rem 4rem;max-width:1440px;margin:0 auto;}
   <div class="panel" id="p5">
     <div class="sem-head">
       <span class="sem-title">Session de Contrôle</span>
-      <span style="font-size:.75rem;color:var(--muted);">Toute matière avec moyenne &lt; 10 est redoable · Note retenue seulement si supérieure · Scores filière basés sur notes principales</span>
     </div>
 
     <div class="ctrl-banner unknown" id="ctrl-banner">
@@ -425,7 +424,7 @@ function updateCtrlSim(){
   if(ann!==null){
     ctrlPrin.textContent=ann.toFixed(2);
     if(ann>=10){banner.className='ctrl-banner safe';document.getElementById('ctrl-icon').textContent='✓';document.getElementById('ctrl-title').textContent='Passage direct';document.getElementById('ctrl-sub').textContent='Moyenne annuelle ≥ 10 — aucune session de contrôle requise';ctrlPrin.className='ctrl-avg-num pass';}
-    else{banner.className='ctrl-banner danger';document.getElementById('ctrl-icon').textContent='⚠';document.getElementById('ctrl-title').textContent='Session de contrôle déclenchée';document.getElementById('ctrl-sub').textContent='Moyenne annuelle < 10 — toute matière en dessous de 10 est redoable';ctrlPrin.className='ctrl-avg-num fail';}
+    else{banner.className='ctrl-banner danger';document.getElementById('ctrl-icon').textContent='⚠';document.getElementById('ctrl-title').textContent='Session de contrôle déclenchée';document.getElementById('ctrl-sub').textContent='Moyenne annuelle < 10 — toute matière avec une moyenne inférieure à 10 est rattrapable';ctrlPrin.className='ctrl-avg-num fail';}
   }else{banner.className='ctrl-banner unknown';document.getElementById('ctrl-icon').textContent='·';document.getElementById('ctrl-title').textContent='Moyenne annuelle';document.getElementById('ctrl-sub').textContent='Entrez vos notes pour voir le statut';ctrlPrin.textContent='—';ctrlPrin.className='ctrl-avg-num';}
   const simWrap=document.getElementById('ctrl-sim-wrap'),simEl=document.getElementById('ctrl-sim');
   if(simWrap)simWrap.style.display='none';
@@ -439,7 +438,7 @@ function buildCtrlList(list,containerId){
 
   const hasAnyData=list.some(s=>getMoy(s.code)!==null);
   if(!hasAnyData){
-    container.innerHTML='<div class="ctrl-empty">Entrez vos notes pour voir les matières redoables.</div>';
+    container.innerHTML='<div class="ctrl-empty">Entrez vos notes pour voir les matières rattrapable.</div>';
     return;
   }
 
@@ -461,7 +460,7 @@ function buildCtrlList(list,containerId){
     // Header
     const head=document.createElement('div');
     head.className='ctrl-subj-head';
-    head.innerHTML=`<span class="ctrl-subj-name">${s.name}</span><div class="ctrl-subj-meta"><span style="font-size:.62rem;color:var(--muted);font-family:'JetBrains Mono',monospace">coef ${s.coef}</span><span class="ctrl-badge fail">Redoable</span></div>`;
+    head.innerHTML=`<span class="ctrl-subj-name">${s.name}</span><div class="ctrl-subj-meta"><span style="font-size:.62rem;color:var(--muted);font-family:'JetBrains Mono',monospace">coef ${s.coef}</span><span class="ctrl-badge fail">rattrapable</span></div>`;
     card.appendChild(head);
 
     // Details row
@@ -555,7 +554,7 @@ function updateCtrlPanel(){
   if(ann!==null){
     ctrlPrin.textContent=ann.toFixed(2);
     if(ann>=10){banner.className='ctrl-banner safe';document.getElementById('ctrl-icon').textContent='✓';document.getElementById('ctrl-title').textContent='Passage direct';document.getElementById('ctrl-sub').textContent='Moyenne annuelle ≥ 10 — aucune session de contrôle requise';ctrlPrin.className='ctrl-avg-num pass';}
-    else{banner.className='ctrl-banner danger';document.getElementById('ctrl-icon').textContent='⚠';document.getElementById('ctrl-title').textContent='Session de contrôle déclenchée';document.getElementById('ctrl-sub').textContent='Moyenne annuelle < 10 — toute matière en dessous de 10 est redoable';ctrlPrin.className='ctrl-avg-num fail';}
+    else{banner.className='ctrl-banner danger';document.getElementById('ctrl-icon').textContent='⚠';document.getElementById('ctrl-title').textContent='Session de contrôle déclenchée';document.getElementById('ctrl-sub').textContent='Moyenne annuelle < 10 — toute matière dont la moyenne est inférieure à 10 est rattrapable';ctrlPrin.className='ctrl-avg-num fail';}
   }else{banner.className='ctrl-banner unknown';document.getElementById('ctrl-icon').textContent='·';document.getElementById('ctrl-title').textContent='Moyenne annuelle';document.getElementById('ctrl-sub').textContent='Entrez vos notes pour voir le statut';ctrlPrin.textContent='—';ctrlPrin.className='ctrl-avg-num';}
 
   buildCtrlList(S1,'ctrl-s1');
