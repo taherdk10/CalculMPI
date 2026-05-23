@@ -169,7 +169,58 @@ main{padding:1.75rem 2rem 4rem;max-width:1440px;margin:0 auto;}
 .ctrl-empty{text-align:center;padding:2rem 1rem;color:var(--muted);font-size:.82rem;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);}
 
 @media(max-width:900px){.scores-layout,.ctrl-grid,.settings-layout{grid-template-columns:1fr;}}
-@media(max-width:640px){header{padding:1.1rem 1rem;}main{padding:1rem 1rem 3rem;}nav{padding:0 1rem;}.grid,.score-cards{grid-template-columns:1fr;}.annual{padding:1.25rem 1.5rem;}.annual-val{font-size:3rem;}.ctrl-details{flex-wrap:wrap;}.ctrl-detail-block{min-width:40%;}}
+
+@media(max-width:640px){
+  html{font-size:16px;}
+
+  /* Header */
+  header{padding:1rem;flex-direction:column;align-items:flex-start;gap:.85rem;}
+  .header-stats{width:100%;display:grid;grid-template-columns:1fr 1fr 1fr;}
+  .stat{min-width:0;padding:.5rem .6rem;}
+  .stat .sval{font-size:1.15rem;}
+
+  /* Nav — horizontal scroll */
+  nav{padding:0;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+  nav::-webkit-scrollbar{display:none;}
+  .tab{padding:.75rem 1rem;font-size:.78rem;white-space:nowrap;flex-shrink:0;}
+
+  /* Main */
+  main{padding:.85rem .85rem 3rem;}
+
+  /* Cards grid */
+  .grid{grid-template-columns:1fr;}
+  .score-cards{grid-template-columns:1fr;}
+
+  /* Input touch targets */
+  .ginput{padding:.6rem .75rem;font-size:.95rem;min-height:44px;}
+  .sbtn{width:40px;height:40px;font-size:.8rem;}
+  .ctrl-inp{font-size:.95rem;padding:.6rem .75rem;min-height:44px;}
+  .ginput,.ctrl-inp{-webkit-appearance:none;}
+
+  /* Annual bar */
+  .annual{padding:1.1rem 1.25rem;flex-direction:row;}
+  .annual-val{font-size:2.8rem;}
+  .annual-left h2{font-size:1rem;}
+
+  /* Contrôle banner */
+  .ctrl-avg-num{font-size:2rem;}
+
+  /* Contrôle details — vertical stack on mobile */
+  .ctrl-details{flex-direction:column;}
+  .ctrl-arrow-block{display:none;}
+  .ctrl-detail-block{flex-direction:row;align-items:center;justify-content:space-between;padding:.7rem 1rem;border-right:none;border-bottom:1px solid var(--border);}
+  .ctrl-detail-block:last-child{border-bottom:none;}
+  .ctrl-detail-lbl{font-size:.65rem;}
+  .ctrl-detail-val{font-size:1.25rem;}
+  .ctrl-inp-block{flex-direction:column;align-items:flex-start;gap:6px;padding:.85rem 1rem;border-right:none;border-bottom:1px solid var(--ctrl-border);}
+  .ctrl-inp-block .ctrl-detail-lbl{margin-bottom:2px;}
+  .ctrl-inp{width:100%;}
+
+  /* Sem head wrap */
+  .sem-head{flex-direction:column;align-items:flex-start;}
+  .sem-right{width:100%;justify-content:space-between;}
+  .legend{display:none;}
+}}
 </style>
 </head>
 
@@ -282,6 +333,7 @@ main{padding:1.75rem 2rem 4rem;max-width:1440px;margin:0 auto;}
   <div class="panel" id="p5">
     <div class="sem-head">
       <span class="sem-title">Session de Contrôle</span>
+      <span style="font-size:.75rem;color:var(--muted);">Toute matière avec moyenne &lt; 10 est redoable · Note retenue seulement si supérieure · Scores filière basés sur notes principales</span>
     </div>
 
     <div class="ctrl-banner unknown" id="ctrl-banner">
@@ -424,7 +476,7 @@ function updateCtrlSim(){
   if(ann!==null){
     ctrlPrin.textContent=ann.toFixed(2);
     if(ann>=10){banner.className='ctrl-banner safe';document.getElementById('ctrl-icon').textContent='✓';document.getElementById('ctrl-title').textContent='Passage direct';document.getElementById('ctrl-sub').textContent='Moyenne annuelle ≥ 10 — aucune session de contrôle requise';ctrlPrin.className='ctrl-avg-num pass';}
-    else{banner.className='ctrl-banner danger';document.getElementById('ctrl-icon').textContent='⚠';document.getElementById('ctrl-title').textContent='Session de contrôle déclenchée';document.getElementById('ctrl-sub').textContent='Moyenne annuelle < 10 — toute matière avec une moyenne inférieure à 10 est rattrapable';ctrlPrin.className='ctrl-avg-num fail';}
+    else{banner.className='ctrl-banner danger';document.getElementById('ctrl-icon').textContent='⚠';document.getElementById('ctrl-title').textContent='Session de contrôle déclenchée';document.getElementById('ctrl-sub').textContent='Moyenne annuelle < 10 — toute matière en dessous de 10 est redoable';ctrlPrin.className='ctrl-avg-num fail';}
   }else{banner.className='ctrl-banner unknown';document.getElementById('ctrl-icon').textContent='·';document.getElementById('ctrl-title').textContent='Moyenne annuelle';document.getElementById('ctrl-sub').textContent='Entrez vos notes pour voir le statut';ctrlPrin.textContent='—';ctrlPrin.className='ctrl-avg-num';}
   const simWrap=document.getElementById('ctrl-sim-wrap'),simEl=document.getElementById('ctrl-sim');
   if(simWrap)simWrap.style.display='none';
@@ -438,7 +490,7 @@ function buildCtrlList(list,containerId){
 
   const hasAnyData=list.some(s=>getMoy(s.code)!==null);
   if(!hasAnyData){
-    container.innerHTML='<div class="ctrl-empty">Entrez vos notes pour voir les matières rattrapable.</div>';
+    container.innerHTML='<div class="ctrl-empty">Entrez vos notes pour voir les matières redoables.</div>';
     return;
   }
 
@@ -460,7 +512,7 @@ function buildCtrlList(list,containerId){
     // Header
     const head=document.createElement('div');
     head.className='ctrl-subj-head';
-    head.innerHTML=`<span class="ctrl-subj-name">${s.name}</span><div class="ctrl-subj-meta"><span style="font-size:.62rem;color:var(--muted);font-family:'JetBrains Mono',monospace">coef ${s.coef}</span><span class="ctrl-badge fail">rattrapable</span></div>`;
+    head.innerHTML=`<span class="ctrl-subj-name">${s.name}</span><div class="ctrl-subj-meta"><span style="font-size:.62rem;color:var(--muted);font-family:'JetBrains Mono',monospace">coef ${s.coef}</span><span class="ctrl-badge fail">Redoable</span></div>`;
     card.appendChild(head);
 
     // Details row
@@ -554,7 +606,7 @@ function updateCtrlPanel(){
   if(ann!==null){
     ctrlPrin.textContent=ann.toFixed(2);
     if(ann>=10){banner.className='ctrl-banner safe';document.getElementById('ctrl-icon').textContent='✓';document.getElementById('ctrl-title').textContent='Passage direct';document.getElementById('ctrl-sub').textContent='Moyenne annuelle ≥ 10 — aucune session de contrôle requise';ctrlPrin.className='ctrl-avg-num pass';}
-    else{banner.className='ctrl-banner danger';document.getElementById('ctrl-icon').textContent='⚠';document.getElementById('ctrl-title').textContent='Session de contrôle déclenchée';document.getElementById('ctrl-sub').textContent='Moyenne annuelle < 10 — toute matière dont la moyenne est inférieure à 10 est rattrapable';ctrlPrin.className='ctrl-avg-num fail';}
+    else{banner.className='ctrl-banner danger';document.getElementById('ctrl-icon').textContent='⚠';document.getElementById('ctrl-title').textContent='Session de contrôle déclenchée';document.getElementById('ctrl-sub').textContent='Moyenne annuelle < 10 — toute matière en dessous de 10 est redoable';ctrlPrin.className='ctrl-avg-num fail';}
   }else{banner.className='ctrl-banner unknown';document.getElementById('ctrl-icon').textContent='·';document.getElementById('ctrl-title').textContent='Moyenne annuelle';document.getElementById('ctrl-sub').textContent='Entrez vos notes pour voir le statut';ctrlPrin.textContent='—';ctrlPrin.className='ctrl-avg-num';}
 
   buildCtrlList(S1,'ctrl-s1');
