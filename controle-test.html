@@ -611,8 +611,8 @@ function recalc(){
   let wS=0,cS=0;[...S1,...S2].forEach(s=>{const m=getMoy(s.code);if(m!==null){wS+=m*s.coef;cS+=s.coef;}});
   const ann=cS>0?wS/cS:null;
   const aEl=document.getElementById('av'),hEl=document.getElementById('ha');
-  if(ann!==null){const cls=ann>=10?'pass':'fail';aEl.textContent=ann.toFixed(2);aEl.className=`annual-val ${cls}`;hEl.textContent=ann.toFixed(2);hEl.className=`sval ${cls}`;}
-  else{aEl.textContent='—';aEl.className='annual-val';hEl.textContent='—';hEl.className='sval';}
+  if(sim!==null){aEl.textContent=sim.toFixed(2);aEl.className=`ctrl-avg-num ctrl-c${sim>=10?' pass':''}`;}
+    else{aEl.textContent='—';}
 
   const algo1=getMoy('756'),algo2=getMoy('765'),prog1=getMoy('757'),prog2=getMoy('766');
   const moyInfo=(algo1!==null&&algo2!==null&&prog1!==null&&prog2!==null)?(2*algo1+2*algo2+prog1+prog2)/6:null;
