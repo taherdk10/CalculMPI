@@ -398,6 +398,30 @@ const S2=[
   {code:'771',name:"Introduction à l'Économie",coef:1.5,type:'de'},
   {code:'773',name:'Anglais',coef:1.5,type:'de'},
 ];
+const MODULES=[
+  ['752','753'],
+  ['750','751'],
+  ['754','755'],
+  ['756','757'],
+  ['758','759','760'],
+  ['761','762'],
+  ['767','768'],
+  ['763','764'],
+  ['765','766'],
+  ['770','771','773'],
+];
+function getModuleAvg(code){
+  const mod=MODULES.find(m=>m.includes(code));
+  if(!mod)return null;
+  let w=0,c=0;
+  mod.forEach(c2=>{
+    const s=[...S1,...S2].find(x=>x.code===c2);
+    if(!s)return;
+    const m=getMoy(s.code);
+    if(m!==null){w+=m*s.coef;c+=s.coef;}
+  });
+  return c>0?w/c:null;
+}
 
 const FIELDS={de:['ds','exam'],mec:['ds','exam'],dse:['ds','tp','exam'],te:['tp','exam'],thm:['ds','exam']};
 const FLABELS={ds:'DS',tp:'TP',exam:'Examen'};
@@ -494,7 +518,12 @@ function buildCtrlList(list,containerId){
     return;
   }
 
-  const failingSubjects=list.filter(s=>{const m=getMoy(s.code);return m!==null&&m<10;});
+  const failingSubjects=list.filter(s=>{
+  const m=getMoy(s.code);
+  if(m===null||m>=10)return false;
+  const modAvg=getModuleAvg(s.code);
+  return modAvg===null||modAvg<10;
+});
   if(failingSubjects.length===0){
     container.innerHTML='<div class="ctrl-empty">✓ Toutes les matières sont au-dessus de 10.</div>';
     return;
