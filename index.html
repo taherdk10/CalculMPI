@@ -434,7 +434,7 @@ function calcMoy(type,v){
     case 'mec':return(g('ds')!==null&&g('exam')!==null)?g('ds')*0.3+g('exam')*0.7:null;
     case 'dse':return(g('ds')!==null&&g('tp')!==null&&g('exam')!==null)?g('ds')*.25+g('tp')*.25+g('exam')*.5:null;
     case 'te': return(g('tp')!==null&&g('exam')!==null)?g('tp')*.5+g('exam')*.5:null;
-    case 'thm':return(g('ds')!==null&&g('exam')!==null)?g('ds')*.25+g('exam')*.75:null;
+    case 'thm':return(g('ds')!==null&&g('exam')!==null)?g('ds')*0.3+g('exam')*0.7:null;
   }
   return null;
 }
